@@ -1,0 +1,56 @@
+Prerequisites:
+
+
+opkg install --force-overwrite openssh-client openssh-client-utils curl shadow-useradd
+opkg install procps-ng-pgrep coreutils-nohup
+
+
+
+#########  /etc/firewall.user ################
+
+SOXIFIER_PORT=1099
+. /lib/functions/network.sh
+# forwarded connections
+sysctl -w net.ipv4.conf.br-lan.route_localnet=1
+iptables -t nat -C prerouting_lan_rule -p tcp ! --dst 192.168.0.0/16 -j DNAT --to 127.0.0.1:$SOXIFIER_PORT ||
+iptables -t nat -I prerouting_lan_rule -p tcp ! --dst 192.168.0.0/16 -j DNAT --to 127.0.0.1:$SOXIFIER_PORT
+
+################################################################################################################3
+
+#########  /etc/init.d/socks    ###########3
+
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006-2011 OpenWrt.org
+
+START=50
+STOP=50
+USE_PROCD=1
+
+USERNAME=root
+COMMAND="sshpass -f /etc/ssh/pass.txt ssh -N -D 1080 -l user SERVER_IP"
+
+start_service() {
+    procd_open_instance
+    procd_set_param user $USERNAME
+    procd_set_param respawn 10 10 0
+    procd_set_param command $COMMAND
+    procd_close_instance
+}
+
+########################################################################################3
+
+
+#############3  /etc/redsocks.conf   ##############
+
+........
+      local_ip = 127.0.0.1;
+      local_port = 1099;
+........
+      ip = 127.0.0.1;
+      port = 1080;
+      type = socks5;
+........
+
+###################################################
+
+

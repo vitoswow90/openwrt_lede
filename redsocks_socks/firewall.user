@@ -1,0 +1,9 @@
+#
+#
+SOXIFIER_PORT=1099
+. /lib/functions/network.sh
+#
+# forwarded connections
+sysctl -w net.ipv4.conf.br-lan.route_localnet=1
+iptables -t nat -C prerouting_lan_rule -p tcp ! --dst 192.168.0.0/16 -j DNAT --to 127.0.0.1:$SOXIFIER_PORT ||
+iptables -t nat -I prerouting_lan_rule -p tcp ! --dst 192.168.0.0/16 -j DNAT --to 127.0.0.1:$SOXIFIER_PORT

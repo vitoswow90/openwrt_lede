@@ -1,0 +1,22 @@
++ dd if=/home/soer/openwrt/openwrt/build_dir/target-x86_64_musl/linux-x86_64/root.ext4 of=/home/soer/openwrt/openwrt/bin/targets/x86/64/openwrt-x86-64-combined-ext4.img bs=512 seek=525312 conv=notrunc
+2097152+0 records in
+2097152+0 records out
+1073741824 bytes (1.1 GB, 1.0 GiB) copied, 1.83863 s, 584 MB/s
++ make_ext4fs -J -l 268435456 /home/soer/openwrt/openwrt/bin/targets/x86/64/openwrt-x86-64-combined-ext4.img.kernel /home/soer/openwrt/openwrt/build_dir/target-x86_64_musl/linux-x86_64/root.grub
+Creating filesystem with parameters:
+    Size: 268435456
+    Block size: 4096
+    Blocks per group: 32768
+    Inodes per group: 8192
+    Inode size: 256
+    Journal blocks: 0
+    Label: 
+    Blocks: 65536
+    Block groups: 2
+    Reserved blocks: 0
+    Reserved block group size: 15
+Created filesystem with 15/16384 inodes and 1885/65536 blocks
++ dd if=/home/soer/openwrt/openwrt/bin/targets/x86/64/openwrt-x86-64-combined-ext4.img.kernel of=/home/soer/openwrt/openwrt/bin/targets/x86/64/openwrt-x86-64-combined-ext4.img bs=512 seek=512 conv=notrunc
+524288+0 records in
+524288+0 records out
+268435456 bytes (268 MB, 256 MiB) copied, 0.395823 s, 678 MB/s
