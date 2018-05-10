@@ -1,0 +1,59 @@
+This blog post explains how to copy files using rsync between the computer running Unix (typically Linux or Mac OS X) and the mobile device running Android, using an USB cable. It's not necessary to root the device. It's not necessary to install any app.
+
+If you want to copy over wifi rather than USB, then please use the app rsync backup for Android (rsync4android) instead. The rest of this tutorial describes a method which needs the computer and the mobile device connected with a USB data cable.
+
+Enable USB debugging on the device. If you don't know how to do it in Settings, then find a tutorial online.
+
+Install adb (Android Debug Bridge) to the Unix system. For example, on Ubuntu: sudo apt-get install android-tools-adb
+
+Connect the mobile device to the computer. Run: adb shell id on the computer. (All commands should be run on the computer unless asked otherwise.) It should display something like:
+
+$ adb shell id
+uid=2000(shell) gid=2000(shell) groups=1004(input),... context=u:r:shell:s0
+If it doesn't work, you may have to enable Settings / Developer options / USB debugging on the device, then reconnect, then click OK on the dialog box in the device, then rerun adb shell id on the computer.
+
+Please note that on Cyanogenmod rsync is installed by default and it is on the $PATH, so you can skip some of the steps below. (If you don't know what to skip, just do everything anyway.)
+
+Download the rsync binary: wget -O rsync.bin http://github.com/pts/rsyncbin/raw/master/rsync.rsync4android
+
+Copy the rsync binary to the device: adb push rsync.bin /data/local/tmp/rsync
+
+Make the rsync binary on the device executable: adb shell chmod 755 /data/local/tmp/rsync
+
+Make sure you have a backup copy of the binary in a more permanent directory: adb shell cp /data/local/tmp/rsync /sdcard/rsync.bin
+
+Get the rsync version by running adb shell /data/local/tmp/rsync --version . Typical output:
+
+$ adb shell /data/local/tmp/rsync --version
+rsync  version 3.1.1  protocol version 31
+Copyright (C) 1996-2014 by Andrew Tridgell, Wayne Davison, and others.
+Web site: http://rsync.samba.org/
+Capabilities:
+    64-bit files, 64-bit inums, 32-bit timestamps, 64-bit long ints,
+    no socketpairs, hardlinks, symlinks, no IPv6, batchfiles, inplace,
+    append, no ACLs, no xattrs, no iconv, no symtimes, no prealloc
+
+rsync comes with ABSOLUTELY NO WARRANTY.  This is free software, and you
+are welcome to redistribute it under certain conditions.  See the GNU
+General Public Licence for details.
+Run rsync --version . If you get something like
+
+rsync: command not found
+, then rsync isn't installed to the computer. On Ubuntu you can install it with sudo apt-get install rsync
+
+Create an rsyncd.conf config file and install it to the device by running: adb shell 'exec >/sdcard/rsyncd.conf && echo address = 127.0.0.1 && echo port = 1873 && echo "[root]" && echo path = / && echo use chroot = false && echo read only = false' . This must finish without displaying any (error) message.
+
+Start the rsync daemon in the device by running: adb shell /data/local/tmp/rsync --daemon --no-detach --config=/sdcard/rsyncd.conf --log-file=/proc/self/fd/2 . It must start up with just a single message:
+
+2015/03/19 15:58:14 [5814] rsyncd version 3.1.1 starting, listening on port 1873
+Keep it running for the duration of the copies (below), and continue working in another terminal window. Or press Ctrl-C to exit right now, and restart it (so it will start running in the background on the device) like this: adb shell '/data/local/tmp/rsync --daemon --config=/sdcard/rsyncd.conf --log-file=/data/local/tmp/foo &'
+
+Start port forwarding by running: adb forward tcp:6010 tcp:1873
+
+Now you can start copying files with rsync (back and forth). An example command: rsync -av --progress --stats rsync://localhost:6010/root/sdcard/Ringtones .
+
+You may find the --size-only flag useful if rsync is copying the same files over and over again.
+
+You may want to copy from or to /storage/sdcard1 instead of /sdcard on the device.
+
+Some newer storage devices have the exfat filesystem (older ones typically have fat or some emulation of it, and that's just fine). Writing to exfat drives rsync -av crazy: it reports steady progress with lots of Operation not permitted errors, but it actually doesn't create any files. This applies both rsync running on the Linux computer and rsync running on the device. A solution is to replace rsync -av with rsync -vrtlD , and restart the copy.
